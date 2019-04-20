@@ -18,6 +18,8 @@ npm install
 npm run build
 ```
 
+Api doc: [https://thomaschampagne.github.io/promise-tron/](https://thomaschampagne.github.io/promise-tron/)
+
 ## Usage
 
 ### Message from ipcRenderer to ipcMain
