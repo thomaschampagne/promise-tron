@@ -2,7 +2,7 @@
   "name": "promise-tron",
   "version": "1.0.0",
   "description": "PromiseTron is a promise based communication system which simplify data exchange between electron main",
-  "keywords": [],
+  "keywords": ["electron", "promise", "ipc", "main", "renderer"],
   "main": "dist/promise-tron.umd.js",
   "module": "dist/promise-tron.es5.js",
   "typings": "dist/types/promise-tron.d.ts",
