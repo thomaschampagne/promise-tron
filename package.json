@@ -1,7 +1,7 @@
 {
   "name": "promise-tron",
-  "version": "0.0.0",
-  "description": "",
+  "version": "1.0.0",
+  "description": "PromiseTron is a promise based communication system which simplify data exchange between electron main",
   "keywords": [],
   "main": "dist/promise-tron.umd.js",
   "module": "dist/promise-tron.es5.js",
@@ -12,7 +12,7 @@
   "author": "Thomas Champagne <th.champagne@gmail.com>",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/thomaschampagne/promise-tron"
   },
   "license": "MIT",
   "engines": {
