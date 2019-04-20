@@ -7,7 +7,6 @@ import * as Electron from 'electron'
  * @licence MIT
  */
 export class PromiseTron {
-
   public static readonly REQUEST_FROM_RENDERER: string = 'promise-tron-request-from-renderer'
   public static readonly REQUEST_FROM_MAIN: string = 'promise-tron-request-from-main'
   public static readonly RESPONSE_TO_RENDERER: string = 'promise-tron-response-to-renderer'
@@ -65,24 +64,29 @@ export class PromiseTron {
   }
 
   /**
-   *
+   * Listen for {IpcRequest} from main thread if on a renderer thread
+   * Listen for {IpcRequest} from renderer thread if on a main thread
+   * @param onRequest Callback which provides incoming {IpcRequest} and reply function
    */
   public on(onRequest: (request: IpcRequest, reply: (result: any) => any) => void): void {
-
     if (this.isMain) {
-
-      this.ipcMain.on(PromiseTron.REQUEST_FROM_RENDERER, (event: Electron.Event, request: IpcRequest) => {
-        onRequest(request, result => {
-          event.sender.send(request.responseId, result)
-        })
-      })
-
+      this.ipcMain.on(
+        PromiseTron.REQUEST_FROM_RENDERER,
+        (event: Electron.Event, request: IpcRequest) => {
+          onRequest(request, result => {
+            event.sender.send(request.responseId, result)
+          })
+        }
+      )
     } else if (this.isRenderer) {
-      this.ipcRenderer.on(PromiseTron.REQUEST_FROM_MAIN, (event: Electron.Event, request: IpcRequest) => {
-        onRequest(request, result => {
-          event.sender.send(request.responseId, result)
-        })
-      })
+      this.ipcRenderer.on(
+        PromiseTron.REQUEST_FROM_MAIN,
+        (event: Electron.Event, request: IpcRequest) => {
+          onRequest(request, result => {
+            event.sender.send(request.responseId, result)
+          })
+        }
+      )
     }
   }
 
@@ -93,11 +97,8 @@ export class PromiseTron {
    * @return Promise of expected result type <R>
    */
   public send<R>(data: any): Promise<R> {
-
     return new Promise((resolve, reject) => {
-
       if (this.isMain && this.webContents) {
-
         const responseId = PromiseTron.RESPONSE_TO_MAIN + '-' + PromiseTron.genId()
 
         // Send the request
@@ -106,9 +107,7 @@ export class PromiseTron {
         })
 
         this.webContents.send(PromiseTron.REQUEST_FROM_MAIN, new IpcRequest(responseId, data))
-
       } else if (this.isRenderer) {
-
         // Generate a unique response channel
         const responseId = PromiseTron.RESPONSE_TO_RENDERER + '-' + PromiseTron.genId()
 
