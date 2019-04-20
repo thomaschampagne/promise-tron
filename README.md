@@ -64,6 +64,7 @@ promiseTronRenderer.on((request /*IpcRequest*/, replyWith /*Function*/) => {
 	console.log(request.data); // Prints: "Hi from main!"
 	replyWith("Reply from ipcRenderer");
 });
+```
 
 ## NPM scripts
 
