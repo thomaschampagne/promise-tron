@@ -3,6 +3,8 @@ PromiseTron is a promise based communication system library which simplify data 
 
 PromiseTron includes **typescript** definitions.
 
+Api doc: [https://thomaschampagne.github.io/promise-tron/](https://thomaschampagne.github.io/promise-tron/)
+
 ## Install
 
 ```bash
