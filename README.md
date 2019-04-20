@@ -15,6 +15,7 @@ or
 git clone https://github.com/thomaschampagne/promise-tron
 cd promise-tron
 npm install
+npm run build
 ```
 
 ## Usage
