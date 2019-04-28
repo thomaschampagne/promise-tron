@@ -96,13 +96,13 @@ export class PromiseTron {
    * @param data
    * @return Promise of expected result type <R>
    */
-  public send<R>(data: any): Promise<R> {
+  public send<R>(data: unknown): Promise<R> {
     return new Promise((resolve, reject) => {
       if (this.isMain && this.webContents) {
         const responseId = PromiseTron.RESPONSE_TO_MAIN + '-' + PromiseTron.genId()
 
         // Send the request
-        this.ipcMain.once(responseId, (event: Electron.Event, result: any) => {
+        this.ipcMain.once(responseId, (event: Electron.Event, result: R) => {
           resolve(result)
         })
 
@@ -123,9 +123,31 @@ export class PromiseTron {
   }
 }
 
+/**
+ * Object used to track communications between IpcMain & IpcRenderer
+ */
 export class IpcRequest {
+  /**
+   * Extract object from IpcRequest data
+   * @return T
+   */
+  public static extractData<T>(request: IpcRequest): T | null {
+    if (request.data) {
+      return request.data as T
+    }
+
+    return null
+  }
+
+  /**
+   * Response identifier used by IpcMain to reply to IpcRenderer (or IpcRenderer to IpcMain)
+   */
   public responseId: string
-  public data: any
+
+  /**
+   * Request payload
+   */
+  public data: unknown
 
   /**
    *
