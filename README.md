@@ -26,22 +26,26 @@ npm run build
 
 ```javascript
 
-import {BrowserWindow, ipcMain, ipcRenderer} from "electron";
-import {PromiseTron} from "promise-tron";
+import { BrowserWindow, ipcMain, ipcRenderer } from "electron";
+import { PromiseTron } from "promise-tron";
 
 // Renderer
 const promiseTronRenderer = new PromiseTron(ipcRenderer);
-promiseTronRenderer.send("Hi from renderer!").then(response => {
-	console.log(response); // Prints: "Reply from ipcMain"
+promiseTronRenderer.send('Hi from renderer!').then(response => {
+  console.log(response); // Prints: "Reply from ipcMain"
+}, error => {
+  console.error(error);
 });
-
 
 // Main
 const browserWindow = new BrowserWindow();
 const promiseTronMain = new PromiseTron(ipcMain, browserWindow.webContents);
-promiseTronMain.on((request /*IpcRequest*/, replyWith /*Function*/) => {
-	console.log(request.data); // Prints: "Hi from renderer!"
-	replyWith("Reply from ipcMain");
+promiseTronMain.on((request /*IpcRequest*/, replyWith /*(promiseTronReply: PromiseTronReply) => void*/) => {
+  console.log(request.data); // Prints: "Hi from renderer!"
+  replyWith({
+    success: 'Reply from ipcMain',
+    error: null
+  });
 });
 
 ```
@@ -49,22 +53,27 @@ promiseTronMain.on((request /*IpcRequest*/, replyWith /*Function*/) => {
 ### Message from ipcMain to ipcRenderer
 
 ```javascript
-import {BrowserWindow, ipcMain, ipcRenderer} from "electron";
-import {PromiseTron} from "promise-tron";
+import { BrowserWindow, ipcMain, ipcRenderer } from 'electron'
+import { PromiseTron } from 'promise-tron'
 
 // Main
 const browserWindow = new BrowserWindow();
 const promiseTronMain = new PromiseTron(ipcMain, browserWindow.webContents);
-promiseTronMain.send("Hi from main!").then(response => {
-	console.log(response); // Prints: "Reply from ipcRenderer"
+promiseTronMain.send('Hi from main!').then(response => {
+  console.log(response); // Prints: "Reply from ipcRenderer"
+}, error => {
+  console.error(error);
 });
 
 
 // Renderer
 const promiseTronRenderer = new PromiseTron(ipcRenderer);
-promiseTronRenderer.on((request /*IpcRequest*/, replyWith /*Function*/) => {
-	console.log(request.data); // Prints: "Hi from main!"
-	replyWith("Reply from ipcRenderer");
+promiseTronRenderer.on((request /*IpcRequest*/, replyWith /*(promiseTronReply: PromiseTronReply) => void*/) => {
+  console.log(request.data); // Prints: "Hi from main!"
+  replyWith({
+    success: 'Reply from ipcRenderer',
+    error: null
+  });
 });
 ```
 
