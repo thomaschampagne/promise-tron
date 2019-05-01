@@ -66,15 +66,20 @@ export class PromiseTron {
   /**
    * Listen for {IpcRequest} from main thread if on a renderer thread
    * Listen for {IpcRequest} from renderer thread if on a main thread
-   * @param onRequest Callback which provides incoming {IpcRequest} and reply function
+   * @param onRequest Callback which provides incoming {IpcRequest} and replyWith function
    */
-  public on(onRequest: (request: IpcRequest, reply: (result: any) => any) => void): void {
+  public on(
+    onRequest: (
+      request: IpcRequest,
+      replyWith: (promiseTronReply: PromiseTronReply) => void
+    ) => void
+  ): void {
     if (this.isMain) {
       this.ipcMain.on(
         PromiseTron.REQUEST_FROM_RENDERER,
         (event: Electron.Event, request: IpcRequest) => {
-          onRequest(request, result => {
-            event.sender.send(request.responseId, result)
+          onRequest(request, (promiseTronReply: PromiseTronReply) => {
+            event.sender.send(request.responseId, promiseTronReply)
           })
         }
       )
@@ -82,8 +87,8 @@ export class PromiseTron {
       this.ipcRenderer.on(
         PromiseTron.REQUEST_FROM_MAIN,
         (event: Electron.Event, request: IpcRequest) => {
-          onRequest(request, result => {
-            event.sender.send(request.responseId, result)
+          onRequest(request, (promiseTronReply: PromiseTronReply) => {
+            event.sender.send(request.responseId, promiseTronReply)
           })
         }
       )
@@ -94,17 +99,24 @@ export class PromiseTron {
    * Send data to ipcMain if called from a renderer thread
    * Send data to ipcRenderer if called from main thread
    * @param data
-   * @return Promise of expected result type <R>
+   * @return Promise of expected result
    */
-  public send<R>(data: unknown): Promise<R> {
+  public send(data: any): Promise<any> {
     return new Promise((resolve, reject) => {
       if (this.isMain && this.webContents) {
         const responseId = PromiseTron.RESPONSE_TO_MAIN + '-' + PromiseTron.genId()
 
         // Send the request
-        this.ipcMain.once(responseId, (event: Electron.Event, result: R) => {
-          resolve(result)
-        })
+        this.ipcMain.once(
+          responseId,
+          (event: Electron.Event, promiseTronReply: PromiseTronReply) => {
+            if (promiseTronReply.error) {
+              reject(promiseTronReply.error)
+            } else {
+              resolve(promiseTronReply.success)
+            }
+          }
+        )
 
         this.webContents.send(PromiseTron.REQUEST_FROM_MAIN, new IpcRequest(responseId, data))
       } else if (this.isRenderer) {
@@ -112,15 +124,27 @@ export class PromiseTron {
         const responseId = PromiseTron.RESPONSE_TO_RENDERER + '-' + PromiseTron.genId()
 
         // Wait for response on channel
-        this.ipcRenderer.once(responseId, (event: Electron.Event, result: R) => {
-          resolve(result)
-        })
+        this.ipcRenderer.once(
+          responseId,
+          (event: Electron.Event, promiseTronReply: PromiseTronReply) => {
+            if (promiseTronReply.error) {
+              reject(promiseTronReply.error)
+            } else {
+              resolve(promiseTronReply.success)
+            }
+          }
+        )
 
         // Send the request
         this.ipcRenderer.send(PromiseTron.REQUEST_FROM_RENDERER, new IpcRequest(responseId, data))
       }
     })
   }
+}
+
+export class PromiseTronReply {
+  public success: any
+  public error: any
 }
 
 /**
@@ -147,7 +171,7 @@ export class IpcRequest {
   /**
    * Request payload
    */
-  public data: unknown
+  public data: any
 
   /**
    *
