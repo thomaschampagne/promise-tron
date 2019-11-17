@@ -1,6 +1,6 @@
 {
   "name": "promise-tron",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "PromiseTron is a promise based communication system which simplify data exchange between electron main and renderer processes",
   "keywords": [
     "electron",
@@ -122,5 +122,9 @@
     "tslint-config-standard": "^8.0.1",
     "typedoc": "^0.15.2",
     "typescript": "^3.7.2"
+  },
+  "__processed_by_ivy_ngcc__": {
+    "module": "8.2.14",
+    "main": "8.2.14"
   }
 }
