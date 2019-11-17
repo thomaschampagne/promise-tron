@@ -1,4 +1,5 @@
 import * as Electron from 'electron'
+import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent
 
 /**
  * PromiseTron is a promise based communication system which simplify data exchange between electron main
@@ -53,17 +54,6 @@ export class PromiseTron {
   }
 
   /**
-   * Generate a random unique identifier
-   * @param length
-   */
-  public static genId(length?: number): string {
-    length = length && length > 0 ? length : 16
-    return ((Math.random() * Date.now()).toString(36) + Math.random().toString(36))
-      .replace(/\./g, '')
-      .slice(0, length)
-  }
-
-  /**
    * Listen for {IpcRequest} from main thread if on a renderer thread
    * Listen for {IpcRequest} from renderer thread if on a main thread
    * @param onRequest Callback which provides incoming {IpcRequest} and replyWith function
@@ -75,18 +65,20 @@ export class PromiseTron {
     ) => void
   ): void {
     if (this.isMain) {
-      this.ipcMain.on(
+      this.ipcMain.handle(
         PromiseTron.REQUEST_FROM_RENDERER,
-        (event: Electron.Event, request: IpcRequest) => {
-          onRequest(request, (promiseTronReply: PromiseTronReply) => {
-            event.sender.send(request.responseId, promiseTronReply)
+        (event: IpcMainInvokeEvent, request: IpcRequest) => {
+          return new Promise(resolve => {
+            onRequest(request, (promiseTronReply: PromiseTronReply) => {
+              resolve(promiseTronReply)
+            })
           })
         }
       )
     } else if (this.isRenderer) {
       this.ipcRenderer.on(
         PromiseTron.REQUEST_FROM_MAIN,
-        (event: Electron.Event, request: IpcRequest) => {
+        (event: Electron.IpcRendererEvent, request: IpcRequest) => {
           onRequest(request, (promiseTronReply: PromiseTronReply) => {
             event.sender.send(request.responseId, promiseTronReply)
           })
@@ -104,11 +96,11 @@ export class PromiseTron {
   public send(data: any): Promise<any> {
     return new Promise((resolve, reject) => {
       if (this.isMain && this.webContents) {
-        const responseId = PromiseTron.RESPONSE_TO_MAIN + '-' + PromiseTron.genId()
+        const ipcRequest = new IpcRequest(data)
 
-        // Send the request
+        // Set the callback
         this.ipcMain.once(
-          responseId,
+          ipcRequest.responseId,
           (event: Electron.Event, promiseTronReply: PromiseTronReply) => {
             if (promiseTronReply.error) {
               reject(promiseTronReply.error)
@@ -117,26 +109,21 @@ export class PromiseTron {
             }
           }
         )
-
-        this.webContents.send(PromiseTron.REQUEST_FROM_MAIN, new IpcRequest(responseId, data))
-      } else if (this.isRenderer) {
-        // Generate a unique response channel
-        const responseId = PromiseTron.RESPONSE_TO_RENDERER + '-' + PromiseTron.genId()
-
-        // Wait for response on channel
-        this.ipcRenderer.once(
-          responseId,
-          (event: Electron.Event, promiseTronReply: PromiseTronReply) => {
-            if (promiseTronReply.error) {
-              reject(promiseTronReply.error)
-            } else {
-              resolve(promiseTronReply.success)
-            }
-          }
-        )
-
         // Send the request
-        this.ipcRenderer.send(PromiseTron.REQUEST_FROM_RENDERER, new IpcRequest(responseId, data))
+        this.webContents.send(PromiseTron.REQUEST_FROM_MAIN, ipcRequest)
+      } else if (this.isRenderer) {
+        this.ipcRenderer
+          .invoke(PromiseTron.REQUEST_FROM_RENDERER, new IpcRequest(data))
+          .then((promiseTronReply: PromiseTronReply) => {
+            if (promiseTronReply.error) {
+              reject(promiseTronReply.error)
+            } else {
+              resolve(promiseTronReply.success)
+            }
+          })
+          .catch(err => {
+            reject(err)
+          })
       }
     })
   }
@@ -151,6 +138,8 @@ export class PromiseTronReply {
  * Object used to track communications between IpcMain & IpcRenderer
  */
 export class IpcRequest {
+  private static GLOBAL_REQUEST_CREATED_COUNT: number = 0
+
   /**
    * Extract object from IpcRequest data
    * @return T
@@ -175,11 +164,11 @@ export class IpcRequest {
 
   /**
    *
-   * @param responseId Response identifier associated to this request
    * @param data Request payload
    */
-  constructor(responseId: string, data: any) {
-    this.responseId = responseId
+  constructor(data: any) {
+    IpcRequest.GLOBAL_REQUEST_CREATED_COUNT++
+    this.responseId = IpcRequest.GLOBAL_REQUEST_CREATED_COUNT.toString()
     this.data = data
   }
 }
