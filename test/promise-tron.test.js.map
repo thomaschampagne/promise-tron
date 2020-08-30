@@ -1,0 +1,1 @@
+{"version":3,"file":"promise-tron.test.js","sourceRoot":"","sources":["promise-tron.test.ts"],"names":[],"mappings":";AAAA,QAAQ,CAAC,aAAa,EAAE,GAAG,EAAE;IAC3B,2BAA2B;AAC7B,CAAC,CAAC,CAAA","sourcesContent":["describe('PromiseTron', () => {\r\n  // TODO Tests to be written\r\n})\r\n"]}

@@ -1,27 +1,22 @@
 {
   "compilerOptions": {
     "moduleResolution": "Node",
-    "target": "esnext",
-    "module": "CommonJS",
-    "lib": [
-      "esnext",
-      "dom"
-    ],
+    "target": "es5",
+    "module":"es2015",
+    "lib": ["es2015", "es2016", "es2017", "dom"],
     "strict": true,
     "sourceMap": true,
     "declaration": true,
     "resolveJsonModule": true,
     "declarationMap": true,
-    "inlineSourceMap": false,
     "allowJs": true,
-    //    "composite": true,
+    "composite": true,
     "inlineSources": true,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "declarationDir": "dist/lib/types",
-    //    "declarationDir": "dist/types",
-    //    "outDir": "dist/lib",
+    "declarationDir": "dist/types",
+    "outDir": "dist/lib",
     "typeRoots": [
       "node_modules/@types"
     ]
