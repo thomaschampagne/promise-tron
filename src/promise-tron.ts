@@ -1,5 +1,11 @@
-import * as Electron from 'electron'
-import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent
+import {
+  Event,
+  IpcMain,
+  IpcMainInvokeEvent,
+  IpcRenderer,
+  IpcRendererEvent,
+  WebContents
+} from 'electron'
 
 /**
  * PromiseTron is a promise based communication system which simplify data exchange between electron main
@@ -13,9 +19,9 @@ export class PromiseTron {
   public static readonly RESPONSE_TO_RENDERER: string = 'promise-tron-response-to-renderer'
   public static readonly RESPONSE_TO_MAIN: string = 'promise-tron-response-to-main'
 
-  public readonly ipcMain: Electron.IpcMain
-  public readonly ipcRenderer: Electron.IpcRenderer
-  public readonly webContents: Electron.WebContents | null
+  public readonly ipcMain: IpcMain
+  public readonly ipcRenderer: IpcRenderer
+  public readonly webContents: WebContents | null
   public readonly isRenderer: boolean
   public readonly isMain: boolean
   public readonly logger: any
@@ -25,14 +31,14 @@ export class PromiseTron {
    * @param ipc Pass IpcMain or IpcRenderer
    * @param webContents Pass the webContents object of your BrowserWindow if you're on main thread
    */
-  constructor(ipc: Electron.IpcMain | Electron.IpcRenderer, webContents?: Electron.WebContents) {
+  constructor(ipc: IpcMain | IpcRenderer, webContents?: WebContents) {
     this.isRenderer = PromiseTron.isProcessRenderer()
     this.isMain = !this.isRenderer
-    this.ipcMain = (this.isRenderer ? null : ipc) as Electron.IpcMain
-    this.ipcRenderer = (this.isRenderer ? ipc : null) as Electron.IpcRenderer
+    this.ipcMain = (this.isRenderer ? null : ipc) as IpcMain
+    this.ipcRenderer = (this.isRenderer ? ipc : null) as IpcRenderer
     this.webContents = webContents ? webContents : null
     if (this.isMain && webContents === null) {
-      throw new Error('You are in main mode: please pass Electron.WebContents in constructor')
+      throw new Error('You are in main mode: please pass WebContents in constructor')
     }
   }
 
@@ -78,7 +84,7 @@ export class PromiseTron {
     } else if (this.isRenderer) {
       this.ipcRenderer.on(
         PromiseTron.REQUEST_FROM_MAIN,
-        (event: Electron.IpcRendererEvent, request: IpcRequest) => {
+        (event: IpcRendererEvent, request: IpcRequest) => {
           onRequest(request, (promiseTronReply: PromiseTronReply) => {
             event.sender.send(request.responseId, promiseTronReply)
           })
@@ -101,7 +107,7 @@ export class PromiseTron {
         // Set the callback
         this.ipcMain.once(
           ipcRequest.responseId,
-          (event: Electron.Event, promiseTronReply: PromiseTronReply) => {
+          (event: Event, promiseTronReply: PromiseTronReply) => {
             if (promiseTronReply.error) {
               reject(promiseTronReply.error)
             } else {
