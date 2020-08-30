@@ -38,19 +38,19 @@ export default {
   input: `src/${libraryName}.ts`,
   output: [
     {
-      /*file: pkg.main, */name: libraryName, format: 'umd', sourcemap: true, dir: 'dist/'
+      /*file: `${libraryName}.umd.ts`,*/ name: libraryName, format: 'cjs', sourcemap: true, dir: 'dist/'
     },
     // {
     //   file: pkg.main, name: libraryName, format: 'umd', sourcemap: true
     // },
     // {
-    //   file: pkg.module, format: 'es', sourcemap: true
+    //   /*file: pkg.module,*/ format: 'es', sourcemap: true, dir: 'dist/'
     // }
   ],
   // Indicate here external modules you don't wanna include in your bundle (i.e.: 'lodash')
   external: ['electron'],
   watch: {
-    include: './src/*.ts'
+    include: 'src/**'
   },
   plugins: [
     // Compile TypeScript files

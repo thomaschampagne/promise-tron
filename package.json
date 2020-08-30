@@ -9,8 +9,7 @@
     "main",
     "renderer"
   ],
-  "main": "dist/lib/promise-tron.umd.js",
-  "module": "dist/lib/promise-tron.es5.js",
+  "main": "dist/promise-tron.js",
   "typings": "dist/types/promise-tron.d.ts",
   "files": [
     "dist"
