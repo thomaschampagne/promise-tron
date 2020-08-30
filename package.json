@@ -1,6 +1,6 @@
 {
   "name": "promise-tron",
-  "version": "2.1.0",
+  "version": "10.0.0",
   "description": "PromiseTron is a promise based communication system which simplify data exchange between electron main and renderer processes",
   "keywords": [
     "electron",
