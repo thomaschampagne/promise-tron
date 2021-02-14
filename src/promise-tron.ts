@@ -1,11 +1,4 @@
-import {
-  Event,
-  IpcMain,
-  IpcMainInvokeEvent,
-  IpcRenderer,
-  IpcRendererEvent,
-  WebContents
-} from 'electron'
+import Electron from 'electron'
 
 /**
  * PromiseTron is a promise based communication system which simplify data exchange between electron main
@@ -19,9 +12,9 @@ export class PromiseTron {
   public static readonly RESPONSE_TO_RENDERER: string = 'promise-tron-response-to-renderer'
   public static readonly RESPONSE_TO_MAIN: string = 'promise-tron-response-to-main'
 
-  public readonly ipcMain: IpcMain
-  public readonly ipcRenderer: IpcRenderer
-  public readonly webContents: WebContents | null
+  public readonly ipcMain: Electron.IpcMain
+  public readonly ipcRenderer: Electron.IpcRenderer
+  public readonly webContents: Electron.WebContents | null
   public readonly isRenderer: boolean
   public readonly isMain: boolean
   public readonly logger: any
@@ -31,11 +24,11 @@ export class PromiseTron {
    * @param ipc Pass IpcMain or IpcRenderer
    * @param webContents Pass the webContents object of your BrowserWindow if you're on main thread
    */
-  constructor(ipc: IpcMain | IpcRenderer, webContents?: WebContents) {
+  constructor(ipc: Electron.IpcMain, webContents?: Electron.WebContents) {
     this.isRenderer = PromiseTron.isProcessRenderer()
     this.isMain = !this.isRenderer
-    this.ipcMain = (this.isRenderer ? null : ipc) as IpcMain
-    this.ipcRenderer = (this.isRenderer ? ipc : null) as IpcRenderer
+    this.ipcMain = (this.isRenderer ? null : ipc) as Electron.IpcMain
+    this.ipcRenderer = (this.isRenderer ? ipc : null) as Electron.IpcRenderer
     this.webContents = webContents ? webContents : null
     if (this.isMain && webContents === null) {
       throw new Error('You are in main mode: please pass WebContents in constructor')
@@ -52,11 +45,11 @@ export class PromiseTron {
     }
 
     // We're in node.js somehow
-    if (!process.type) {
+    if (!(process as NodeJS.Process).type) {
       return false
     }
 
-    return process.type === 'renderer'
+    return (process as NodeJS.Process).type === 'renderer'
   }
 
   /**
@@ -71,9 +64,9 @@ export class PromiseTron {
     ) => void
   ): void {
     if (this.isMain) {
-      this.ipcMain.handle(
+      (this.ipcMain as any).handle(
         PromiseTron.REQUEST_FROM_RENDERER,
-        (event: IpcMainInvokeEvent, request: IpcRequest) => {
+        (event: Electron.Event, request: IpcRequest) => {
           return new Promise(resolve => {
             onRequest(request, (promiseTronReply: PromiseTronReply) => {
               resolve(promiseTronReply)
@@ -84,7 +77,7 @@ export class PromiseTron {
     } else if (this.isRenderer) {
       this.ipcRenderer.on(
         PromiseTron.REQUEST_FROM_MAIN,
-        (event: IpcRendererEvent, request: IpcRequest) => {
+        (event: Electron.Event, request: IpcRequest) => {
           onRequest(request, (promiseTronReply: PromiseTronReply) => {
             event.sender.send(request.responseId, promiseTronReply)
           })
@@ -118,7 +111,7 @@ export class PromiseTron {
         // Send the request
         this.webContents.send(PromiseTron.REQUEST_FROM_MAIN, ipcRequest)
       } else if (this.isRenderer) {
-        this.ipcRenderer
+        (this.ipcRenderer as any)
           .invoke(PromiseTron.REQUEST_FROM_RENDERER, new IpcRequest(data))
           .then((promiseTronReply: PromiseTronReply) => {
             if (promiseTronReply.error) {
@@ -127,7 +120,7 @@ export class PromiseTron {
               resolve(promiseTronReply.success)
             }
           })
-          .catch(err => {
+          .catch((err: Error) => {
             reject(err)
           })
       }
