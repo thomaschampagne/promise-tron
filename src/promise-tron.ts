@@ -1,6 +1,6 @@
 import {
-  Event,
   IpcMain,
+  IpcMainEvent,
   IpcMainInvokeEvent,
   IpcRenderer,
   IpcRendererEvent,
@@ -31,8 +31,8 @@ export class PromiseTron {
    * @param ipc Pass IpcMain or IpcRenderer
    * @param webContents Pass the webContents object of your BrowserWindow if you're on main thread
    */
-  constructor(ipc: IpcMain | IpcRenderer, webContents?: WebContents) {
-    this.isRenderer = PromiseTron.isProcessRenderer()
+  constructor(ipc: IpcMain | IpcRenderer, webContents?: Electron.WebContents) {
+    this.isRenderer = !webContents
     this.isMain = !this.isRenderer
     this.ipcMain = (this.isRenderer ? null : ipc) as IpcMain
     this.ipcRenderer = (this.isRenderer ? ipc : null) as IpcRenderer
@@ -40,23 +40,6 @@ export class PromiseTron {
     if (this.isMain && webContents === null) {
       throw new Error('You are in main mode: please pass WebContents in constructor')
     }
-  }
-
-  /**
-   * Tells if your are running into a renderer process. If false, you are in main process
-   */
-  public static isProcessRenderer(): boolean {
-    // node-integration is disabled
-    if (!process) {
-      return true
-    }
-
-    // We're in node.js somehow
-    if (!process.type) {
-      return false
-    }
-
-    return process.type === 'renderer'
   }
 
   /**
@@ -71,7 +54,7 @@ export class PromiseTron {
     ) => void
   ): void {
     if (this.isMain) {
-      this.ipcMain.handle(
+      (this.ipcMain as IpcMain).handle(
         PromiseTron.REQUEST_FROM_RENDERER,
         (event: IpcMainInvokeEvent, request: IpcRequest) => {
           return new Promise(resolve => {
@@ -84,7 +67,7 @@ export class PromiseTron {
     } else if (this.isRenderer) {
       this.ipcRenderer.on(
         PromiseTron.REQUEST_FROM_MAIN,
-        (event: IpcRendererEvent, request: IpcRequest) => {
+        (event: IpcMainEvent | IpcRendererEvent, request: IpcRequest) => {
           onRequest(request, (promiseTronReply: PromiseTronReply) => {
             event.sender.send(request.responseId, promiseTronReply)
           })
@@ -107,7 +90,7 @@ export class PromiseTron {
         // Set the callback
         this.ipcMain.once(
           ipcRequest.responseId,
-          (event: Event, promiseTronReply: PromiseTronReply) => {
+          (event: IpcMainEvent | IpcRendererEvent, promiseTronReply: PromiseTronReply) => {
             if (promiseTronReply.error) {
               reject(promiseTronReply.error)
             } else {
@@ -127,7 +110,7 @@ export class PromiseTron {
               resolve(promiseTronReply.success)
             }
           })
-          .catch(err => {
+          .catch((err: Error) => {
             reject(err)
           })
       }
